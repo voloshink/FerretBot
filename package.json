@@ -1,0 +1,23 @@
+{
+  "name": "ferretbot",
+  "version": "1.0.0",
+  "description": "Ferret bot for destiny.gg",
+  "main": "bot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voloshink/FerretBot.git"
+  },
+  "author": "Polecat",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/voloshink/FerretBot/issues"
+  },
+  "homepage": "https://github.com/voloshink/FerretBot#readme",
+  "dependencies": {
+    "request": "^2.69.0",
+    "websocket": "^1.0.22"
+  }
+}

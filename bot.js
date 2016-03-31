@@ -1,17 +1,18 @@
 var fs = require('fs');
 var request = require('request');
+var config = require('./config.json');
 var WebSocketClient = require('websocket').client;
 
 var Ferret = function() {
     this.whitelist = [];
     this.loadWhitelist();
-    this.ratelimit = 60;
+    this.ratelimit = 40;
     this.lastMessage = '';
     this.lastSent = new Date();
     this.socket = new WebSocketClient();
 
     this.socket.connect('ws://www.destiny.gg/ws', null, '*', {
-        'Cookie': 'authtoken=<api token>;'
+        'Cookie': 'authtoken=' + config.auth + ';'
     });
 
     this.socket.on('connect', function(connection) {
@@ -24,6 +25,14 @@ var Ferret = function() {
         connection.on('close', function() {
             console.log('Connection closed');
         })
+
+        connection.on('ping', function(data) {
+            if (!this.pingTest) return;
+            var now = new Date();
+            var delay = Math.abs(now.getTime() - this.lastPing.getTime());
+            this.send('FerretLOL test message recieved in ' + delay + ' ms', true);
+            this.pingTest = false;
+        }.bind(this));
 
         connection.on('message', function(message) {
             if (message.type !== 'utf8') return;
@@ -48,7 +57,9 @@ Ferret.prototype.handleMessage = function(nick, message) {
     message = message.toLowerCase();
     if (this.whitelist.indexOf(nick) === -1) return;
 
-    if (message === '!ferret') { 
+    var arr = message.split(' ');
+
+    if (message === '!ferret' || message === '!polecat' || (arr[0] === '!' && arr[1] && arr[1] === 'ferretlol')) { 
         this.getFerret(function(url) {
             this.send('FerretLOL ' + url + ' FerretLOL');
         }.bind(this));
@@ -57,10 +68,15 @@ Ferret.prototype.handleMessage = function(nick, message) {
 
     if (nick !== 'polecat') return;
 
-    var arr = message.split(' ');
+    if (arr[0] === '!fping') {
+        this.pingTest = true;
+        this.lastPing = new Date();
+        this.connection.ping('ping');
+        return;
+    }
 
     if (arr[0] === '!fwhitelist' && arr[1]) { 
-        this.whitelist.push(arr[1]);
+        if (this.whitelist.indexOf(arr[1]) === -1) this.whitelist.push(arr[1]);
         this.send('FerretLOL ' + arr[1], true);
         this.saveWhiteList();
         return;
