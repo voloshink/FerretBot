@@ -17,14 +17,14 @@ var Ferret = function() {
 
 Ferret.prototype.newSocket = function() {
 	var socket = new WebSocketClient();
-	socket.socket.connect('ws://www.destiny.gg/ws', null, '*', {
+	socket.connect('ws://www.destiny.gg/ws', null, '*', {
 		'Cookie': 'authtoken=' + config.auth + ';'
 	});
 
 	socket.on('connect', function(connection) {
 		this.connection = connection;
 		this.attachListeners(connection);
-	}).bind(this);
+	}.bind(this));
 
 	socket.on('connectFailed', function(err) {
     	console.log('Connect Error: ' + err.toString());
@@ -39,7 +39,7 @@ Ferret.prototype.attachListeners = function(connection) {
 	connection.on('close', function() {
 		console.log('Connection closed');
 		this.newSocket();
-	}).bind(this);
+	}.bind(this));
 
 	connection.on('ping', function(data) {
 		if (!this.pingTest) return;
