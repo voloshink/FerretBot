@@ -1,4 +1,5 @@
 node_modules
 whitelist.txt
 config.json
+config.json.save
 run

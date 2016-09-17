@@ -11,6 +11,7 @@ var Ferret = function() {
 	this.lastMessage = '';
 	this.lastSent = new Date();
 	this.lastPM = new Date();
+	this.admins = ['polecat','syunfox','righttobeararmslol']
 
 	this.newSocket();
 }
@@ -30,7 +31,6 @@ Ferret.prototype.newSocket = function() {
     	console.log('Connect Error: ' + err.toString());
 	});
 }
-
 Ferret.prototype.attachListeners = function(connection) {
 	connection.on('error', function(err) {
 		console.log('Socket error ' + err.toString());
@@ -88,7 +88,7 @@ Ferret.prototype.handleMessage = function(nick, message) {
 		}
 	}
 
-	if (nick !== 'polecat' && nick !== 'syunfox') return;
+	if (this.admins.indexOf(nick) === -1) return;
 
 	if (arr[0] === '!fping') {
 		this.pingTest = true;
@@ -146,7 +146,6 @@ Ferret.prototype.getFerret = function(callback) {
 	}
 
 	request(options, function(err, response, body) {
-		console.log(body.url);
 		if (!err && response.statusCode === 200 && body && body.url) callback(body.url);
 	});
 }
@@ -183,7 +182,7 @@ Ferret.prototype.getUptime = function() {
 
 
 String.prototype.toHHMMSS = function () {
-	var sec_num = parseInt(this, 10); // don't forget the second param
+	var sec_num = parseInt(this, 10);
 	var hours   = Math.floor(sec_num / 3600);
 	var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
 	var seconds = sec_num - (hours * 3600) - (minutes * 60);
