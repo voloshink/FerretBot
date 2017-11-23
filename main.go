@@ -17,6 +17,7 @@ const (
 	defaultConfigFile = "config.json"
 	ferretEndpoint    = "https://polecat.me/api/ferret"
 	githubURL         = "https://github.com/voloshink/FerretBot"
+	pingInterval      = time.Minute
 )
 
 var (
@@ -25,6 +26,8 @@ var (
 	lastSent        = time.Now()
 	lastPM          = time.Now()
 	startTime       = time.Now()
+	lastPing        = timeToUnix(time.Now())
+	lastPong        = timeToUnix(time.Now())
 	messageInterval = time.Minute
 	pmInterval      = time.Second * 30
 	configFile      string
@@ -106,6 +109,7 @@ func startBot(key string) {
 
 	messages := make(chan dggchat.Message)
 	errors := make(chan string)
+	pings := make(chan dggchat.Ping)
 
 	dgg.AddMessageHandler(func(m dggchat.Message, s *dggchat.Session) {
 		messages <- m
@@ -115,6 +119,12 @@ func startBot(key string) {
 		errors <- e
 	})
 
+	dgg.AddPingHandler(func(p dggchat.Ping, s *dggchat.Session) {
+		pings <- p
+	})
+
+	go checkConnection(dgg)
+
 	for {
 		select {
 		case m := <-messages:
@@ -123,7 +133,40 @@ func startBot(key string) {
 			}
 		case e := <-errors:
 			log.Printf("Error %s\n", e)
+		case p := <-pings:
+			lastPong = p.Timestamp
 		}
 	}
 
+}
+
+func checkConnection(s *dggchat.Session) {
+	ticker := time.NewTicker(pingInterval)
+	for {
+		<-ticker.C
+		if lastPing != lastPong {
+			log.Println("Ping mismatch, attempting to reconnect")
+			err := s.Close()
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			err = s.Open()
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			continue
+		}
+		s.SendPing()
+		lastPing = timeToUnix(time.Now())
+	}
+}
+
+// func unixToTime(stamp int64) time.Time {
+// return time.Unix(stamp/1000, 0)
+// }
+
+func timeToUnix(t time.Time) int64 {
+	return t.Unix() * 1000
 }
